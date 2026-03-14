@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - Inventory Management{% endblock %}
+{% block page_title %}Checkout{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-method-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid #e3e6ed;
+    }
+    
+    .payment-method-card:hover {
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+    }
+    
+    .payment-method-card.selected {
+        border-color: #3b82f6;
+        background-color: #f0f7ff;
+    }
+    
+    .payment-details {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .payment-details.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <form method="POST" action="{{ url_for('process_payment') }}" id="checkout-form" enctype="multipart/form-data">
+            
+            <!-- Order Summary -->
+            <div class="data-table mb-4">
+                <div class="p-3 border-bottom">
+                    <h5 class="mb-0">Order Items</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart_items %}
+                            {% if item.product %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if item.product.image %}
+                                        <img src="{{ url_for('static', filename=item.product.image) }}" class="product-image me-3" alt="{{ item.product.name }}">
+                                        {% else %}
+                                        <div class="product-image me-3 bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; border-radius: 8px;">
+                                            <i class="bi bi-box text-muted"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-medium">{{ item.product.name }}</div>
+                                            <small class="text-muted">In Stock: {{ item.product.stock }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>₹{{ "%.2f"|format(item.product.price) }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td class="fw-medium">₹{{ "%.2f"|format(item.subtotal) }}</td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Payment Method Selection -->
+            <div class="form-card mb-4">
+                <h5 class="mb-4"><i class="bi bi-credit-card me-2"></i>Select Payment Method</h5>
+                
+                <div class="row g-3 mb-4">
+                    <!-- UPI Payment -->
+                    <div class="col-md-6">
+                        <div class="payment-method-card card h-100 p-3" onclick="selectPaymentMethod('upi')" id="payment-upi">
+                            <div class="text-center">
+                                <i class="bi bi-phone display-6 text-primary mb-2"></i>
+                                <h6 class="mb-0">UPI</h6>
+                                <small class="text-muted">Pay via UPI ID</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="payment-method-card card h-100 p-3" onclick="selectPaymentMethod('bank_transfer')" id="payment-bank_transfer">
+                            <div class="text-center">
+                                <i class="bi bi-bank display-6 text-info mb-2"></i>
+                                <h6 class="mb-0">Bank Transfer</h6>
+                                <small class="text-muted">NEFT/RTGS/IMPS</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hidden field to store selected payment method -->
+                <input type="hidden" name="payment_method" id="selected_payment_method" value="">
+                
+                <!-- Validation message -->
+                <div id="payment-method-error" class="alert alert-danger" style="display: none;">
+                    Please select a payment method.
+                </div>
+                
+                <!-- UPI Payment Details -->
+                <div class="payment-details" id="upi-details">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle me-2"></i>UPI Payment Instructions</h6>
+                        <ol class="mb-0">
+                            <li>Open your UPI app (Google Pay, PhonePe, Paytm, etc.)</li>
+                            <li>Enter the UPI ID: <strong>{{ payment_settings.upi_id if payment_settings and payment_settings.upi_id else 'Not configured' }}</strong></li>
+                            <li>Enter the exact amount: <strong>₹{{ "%.2f"|format(total) }}</strong></li>
+                            <li>Complete the payment and enter the transaction ID below</li>
+                        </ol>
+                    </div>
+                    <div class="mb-3">
+                        <label for="upi_id" class="form-label">Your UPI ID <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="upi_id" name="upi_id" placeholder="yourname@upi">
+                    </div>
+                    <div class="mb-3">
+                        <label for="upi_transaction_id" class="form-label">Transaction ID / UTR Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="upi_transaction_id" name="transaction_id" placeholder="Enter UTR/Transaction ID">
+                        <small class="text-muted">You can find this in your UPI app's transaction history</small>
+                    </div>
+                </div>
+                
+
+                
+                <!-- Bank Transfer Details -->
+                <div class="payment-details" id="bank_transfer-details">
+                    <div class="alert alert-info mb-4">
+                        <h6><i class="bi bi-info-circle me-2"></i>Bank Transfer Details</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Bank Name:</strong> {{ payment_settings.bank_name if payment_settings and payment_settings.bank_name else 'Not configured' }}</p>
+                                <p class="mb-1"><strong>Account Number:</strong> {{ payment_settings.account_number if payment_settings and payment_settings.account_number else 'Not configured' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>IFSC Code:</strong> {{ payment_settings.ifsc_code if payment_settings and payment_settings.ifsc_code else 'Not configured' }}</p>
+                                <p class="mb-0"><strong>Account Holder:</strong> {{ payment_settings.account_holder_name if payment_settings and payment_settings.account_holder_name else 'Not configured' }}</p>
+                            </div>
+                        </div>
+                        <hr>
+                        <p class="mb-0"><strong>Amount to Transfer:</strong> <span class="text-success fw-bold">₹{{ "%.2f"|format(total) }}</span></p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="bank_transaction_id" class="form-label">Transaction ID / Reference Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="bank_transaction_id" name="transaction_id" placeholder="Enter Transaction ID / Reference Number">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment_proof" class="form-label">Upload Payment Proof (Screenshot/Receipt)</label>
+                        <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/*,.pdf">
+                        <small class="text-muted">Upload a screenshot of your payment or receipt (optional but recommended)</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('view_cart') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Cart
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-circle me-2"></i>Complete Payment
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="form-card">
+            <h5 class="mb-4">Payment Summary</h5>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Items</span>
+                <span>{{ cart_items|length }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Subtotal</span>
+                <span>₹{{ "%.2f"|format(total) }}</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between mb-4">
+                <span class="fw-bold">Total Amount</span>
+                <span class="fw-bold fs-4">₹{{ "%.2f"|format(total) }}</span>
+            </div>
+            
+            <div class="alert alert-warning">
+                <i class="bi bi-shield-check me-2"></i>
+                <small>Your payment will be processed securely. Please keep your transaction ID for reference.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedMethod = '';
+
+function selectPaymentMethod(method) {
+    // Remove selected class from all cards
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked card
+    document.getElementById('payment-' + method).classList.add('selected');
+    
+    // Update hidden input
+    document.getElementById('selected_payment_method').value = method;
+    selectedMethod = method;
+    
+    // Hide all payment details
+    document.querySelectorAll('.payment-details').forEach(detail => {
+        detail.classList.remove('active');
+    });
+    
+    // Show selected payment details
+    document.getElementById(method + '-details').classList.add('active');
+    
+    // Hide error message
+    document.getElementById('payment-method-error').style.display = 'none';
+}
+
+// Form validation
+document.getElementById('checkout-form').addEventListener('submit', function(e) {
+    if (!selectedMethod) {
+        e.preventDefault();
+        document.getElementById('payment-method-error').style.display = 'block';
+        return false;
+    }
+    
+    // Validate required fields based on payment method
+    const transactionId = document.querySelector('input[name="transaction_id"]').value;
+    if (!transactionId.trim()) {
+        e.preventDefault();
+        alert('Please enter the Transaction ID / UTR Number');
+        return false;
+    }
+    
+    return true;
+});
+</script>
+{% endblock %}
+
