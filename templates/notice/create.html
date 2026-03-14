@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Notice - Inventory Management{% endblock %}
+{% block page_title %}Create Notice{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('create_notice') }}">
+                <div class="mb-3">
+                    <label class="form-label">Title *</label>
+                    <input type="text" name="title" class="form-control" placeholder="Enter notice title" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Content *</label>
+                    <textarea name="content" class="form-control" rows="6" placeholder="Enter notice content" required></textarea>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Priority</label>
+                        <select name="priority" class="form-select">
+                            <option value="normal">Normal</option>
+                            <option value="high">High</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Target Audience</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="target_roles" value="admin" class="form-check-input" id="roleAdmin">
+                                <label class="form-check-label" for="roleAdmin">Admin</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" name="target_roles" value="manager" class="form-check-input" id="roleManager">
+                                <label class="form-check-label" for="roleManager">Manager</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" name="target_roles" value="staff" class="form-check-input" id="roleStaff">
+                                <label class="form-check-label" for="roleStaff">Staff</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" name="target_roles" value="supplier" class="form-check-input" id="roleSupplier">
+                                <label class="form-check-label" for="roleSupplier">Supplier</label>
+                            </div>
+                        </div>
+                        <small class="text-muted">Leave empty to show to all users</small>
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-megaphone me-2"></i>Publish Notice
+                    </button>
+                    <a href="{{ url_for('notices') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
