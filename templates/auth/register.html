@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Inventory Management{% endblock %}
+
+{% block auth_content %}
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <h2>Create Account</h2>
+                <p>Join our inventory management system</p>
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="username" class="form-control" placeholder="Enter your name" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <select name="role" class="form-select" id="roleSelect" required>
+                        <option value="">Select your role</option>
+                        <option value="staff">Staff Member</option>
+                        <option value="manager">Manager</option>
+                        <option value="supplier">Supplier</option>
+                    </select>
+                </div>
+                
+                <!-- Staff specific field -->
+                <div class="mb-3 role-field" id="staffField" style="display: none;">
+                    <label class="form-label">Assigned Manager</label>
+                    <select name="manager_id" class="form-select">
+                        <option value="">Select your manager</option>
+                        {% for manager in managers %}
+                        <option value="{{ manager._id }}">{{ manager.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Supplier specific fields -->
+                <div class="role-field" id="supplierFields" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label">Company Name</label>
+                        <input type="text" name="company_name" class="form-control" placeholder="Enter company name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Number</label>
+                        <input type="tel" name="contact_number" class="form-control" placeholder="Enter contact number">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control" rows="2" placeholder="Enter business address"></textarea>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="Create a password" required minlength="6">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" name="confirm_password" class="form-control" placeholder="Confirm your password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">Create Account</button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .auth-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        padding: 20px;
+    }
+    
+    .auth-container {
+        width: 100%;
+        max-width: 480px;
+    }
+    
+    .auth-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    .auth-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .auth-header .logo {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+    
+    .auth-header .logo i {
+        font-size: 2rem;
+        color: #fff;
+    }
+    
+    .auth-header h2 {
+        color: #1e293b;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    
+    .auth-header p {
+        color: #64748b;
+    }
+    
+    .auth-footer {
+        text-align: center;
+        margin-top: 25px;
+        padding-top: 25px;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .auth-footer p {
+        margin: 0;
+        color: #64748b;
+    }
+    
+    .auth-footer a {
+        color: #2563eb;
+        font-weight: 600;
+    }
+</style>
+
+<script>
+    document.getElementById('roleSelect').addEventListener('change', function() {
+        document.querySelectorAll('.role-field').forEach(el => el.style.display = 'none');
+        
+        if (this.value === 'staff') {
+            document.getElementById('staffField').style.display = 'block';
+        } else if (this.value === 'supplier') {
+            document.getElementById('supplierFields').style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

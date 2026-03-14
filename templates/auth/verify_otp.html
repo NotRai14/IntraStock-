@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify OTP - Inventory Management{% endblock %}
+
+{% block auth_content %}
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h2>Verify OTP</h2>
+                <p>Enter the 6-digit code sent to {{ email }}</p>
+                {% if purpose == 'password_reset' %}
+                <small class="text-muted d-block mt-2">Password Reset Verification</small>
+                {% elif purpose == 'verification' %}
+                <small class="text-muted d-block mt-2">Email Verification</small>
+                {% elif purpose == 'login_2fa' %}
+                <small class="text-muted d-block mt-2">Two-Factor Authentication</small>
+                {% endif %}
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('verify_otp', email=email, purpose=purpose) }}">
+                <div class="mb-4">
+                    <label class="form-label">Enter OTP</label>
+                    <input type="text" name="otp" class="form-control text-center otp-input" 
+                           placeholder="000000" maxlength="6" pattern="[0-9]{6}" required>
+                    <small class="text-muted">
+                        {% if purpose == 'login_2fa' %}
+                        OTP expires in 5 minutes
+                        {% else %}
+                        OTP expires in 10 minutes
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">Verify OTP</button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Didn't receive the code?</p>
+                <form method="POST" action="{{ url_for('resend_otp', email=email, purpose=purpose) }}" class="d-inline">
+                    <button type="submit" class="btn btn-link p-0">Resend OTP</button>
+                </form>
+                {% if purpose == 'password_reset' %}
+                <span class="mx-2">|</span>
+                <a href="{{ url_for('forgot_password') }}">Back</a>
+                {% elif purpose == 'login_2fa' %}
+                <span class="mx-2">|</span>
+                <a href="{{ url_for('login') }}">Back to Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .auth-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        padding: 20px;
+    }
+    
+    .auth-container {
+        width: 100%;
+        max-width: 420px;
+    }
+    
+    .auth-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    .auth-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .auth-header .logo {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+    
+    .auth-header .logo i {
+        font-size: 2rem;
+        color: #fff;
+    }
+    
+    .auth-header h2 {
+        color: #1e293b;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    
+    .auth-header p {
+        color: #64748b;
+    }
+    
+    .otp-input {
+        font-size: 2rem;
+        letter-spacing: 10px;
+        padding: 15px;
+    }
+    
+    .auth-footer {
+        text-align: center;
+        margin-top: 25px;
+        padding-top: 25px;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .auth-footer p {
+        margin: 0;
+        color: #64748b;
+    }
+    
+    .auth-footer a {
+        color: #2563eb;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
