@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Inventory Management{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Total Users</p>
+                    <h3 class="stat-value mb-0">{{ stats.total_users }}</h3>
+                </div>
+                <div class="icon primary">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Products</p>
+                    <h3 class="stat-value mb-0">{{ stats.total_products }}</h3>
+                </div>
+                <div class="icon success">
+                    <i class="bi bi-box"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Total Orders</p>
+                    <h3 class="stat-value mb-0">{{ stats.total_orders }}</h3>
+                </div>
+                <div class="icon primary">
+                    <i class="bi bi-receipt"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Pending Orders</p>
+                    <h3 class="stat-value mb-0">{{ stats.pending_orders }}</h3>
+                </div>
+                <div class="icon warning">
+                    <i class="bi bi-clock"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Suppliers</p>
+                    <h3 class="stat-value mb-0">{{ stats.total_suppliers }}</h3>
+                </div>
+                <div class="icon success">
+                    <i class="bi bi-truck"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 col-xl-2">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Low Stock</p>
+                    <h3 class="stat-value mb-0 text-danger">{{ stats.low_stock_products }}</h3>
+                </div>
+                <div class="icon danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 col-xl-2" style="width: auto">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Wallet Balance</p>
+                    <h3 class="stat-value mb-0 text-success" >₹{{ "{:,.2f}".format(stats.wallet_balance) }}</h3>
+                </div>
+                <div class="icon success">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="data-table">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Orders</h5>
+                <a href="{{ url_for('admin_reports') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td>{{ order.order_number }}</td>
+                            <td>{{ order.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>₹{{ "%.2f"|format(order.total) }}</td>
+                            <td><span class="status-badge {{ order.status }}">{{ order.status|capitalize }}</span></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4">No recent orders</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="form-card">
+            <h5 class="mb-3">Quick Actions</h5>
+            <div class="d-grid gap-2">
+                <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-people me-2"></i>Manage Users
+                </a>
+                <a href="{{ url_for('products') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-box me-2"></i>Manage Products
+                </a>
+                <a href="{{ url_for('categories') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-tags me-2"></i>Manage Categories
+                </a>
+                <a href="{{ url_for('admin_reports') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-bar-chart me-2"></i>View Reports
+                </a>
+                <a href="{{ url_for('create_notice') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-megaphone me-2"></i>Create Notice
+                </a>
+            </div>
+        </div>
+        
+        <div class="data-table mt-4">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Users</h5>
+                <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in recent_users %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-primary rounded-circle text-white d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                        {{ user.username[0]|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">{{ user.username }}</div>
+                                        <small class="text-muted">{{ user.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-secondary">{{ user.role }}</span></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" class="text-center py-4">No users</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
