@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Suppliers - Inventory Management{% endblock %}
+{% block page_title %}Suppliers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="mb-0 text-muted">{{ suppliers|length }} suppliers</p>
+</div>
+
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Company</th>
+                    <th>Contact</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in suppliers %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-sm bg-success rounded-circle text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                {{ supplier.username[0]|upper }}
+                            </div>
+                            <div>
+                                <div class="fw-medium">{{ supplier.username }}</div>
+                                <small class="text-muted">{{ supplier.email }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if supplier.company_name %}
+                        <strong>{{ supplier.company_name }}</strong>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if supplier.contact_number %}
+                        {{ supplier.contact_number }}
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if supplier.is_active %}
+                        <span class="status-badge completed">Active</span>
+                        {% else %}
+                        <span class="status-badge rejected">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('products') }}?supplier={{ supplier._id }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-box me-1"></i>View Products
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-4">
+                        <i class="bi bi-truck display-4 text-muted d-block mb-2"></i>
+                        <p class="text-muted">No suppliers available</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
