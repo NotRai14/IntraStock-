@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Pay Suppliers - Inventory Management{% endblock %}
+{% block page_title %}Pay Suppliers{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-method-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid #e3e6ed;
+    }
+    
+    .payment-method-card:hover {
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+    }
+    
+    .payment-method-card.selected {
+        border-color: #3b82f6;
+        background-color: #f0f7ff;
+    }
+    
+    .payment-details {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .payment-details.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6 class="text-white-50">Your Current Wallet Balance</h6>
+                        <h2 class="mb-1">₹{{ "{:,.2f}".format(admin_balance) }}</h2>
+                        <p class="text-white-50 mb-0">Use this balance to pay your suppliers</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <i class="bi bi-wallet2" style="font-size: 4rem; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-send-check me-2"></i>Make Payment to Supplier</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('supplier_payments') }}" id="payment-form">
+                    
+                    <div class="mb-3">
+                        <label for="supplier_id" class="form-label">Select Supplier <span class="text-danger">*</span></label>
+                        <select class="form-select" id="supplier_id" name="supplier_id" required>
+                            <option value="">-- Choose a Supplier --</option>
+                            {% for supplier in suppliers %}
+                            <option value="{{ supplier._id }}">
+                                {{ supplier.company_name or supplier.username }} ({{ supplier.email }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Payment Amount <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control" id="amount" name="amount" 
+                                placeholder="Enter amount" min="1" step="0.01" required>
+                        </div>
+                        <small class="text-muted">Available: <strong class="text-success">₹{{ "{:,.2f}".format(admin_balance) }}</strong></small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                        <div class="row g-3">
+                            <!-- UPI Payment -->
+                    <div class="col-md-6">
+                        <div class="payment-method-card card h-100 p-3" onclick="selectPaymentMethod('upi')" id="payment-upi">
+                            <div class="text-center">
+                                <i class="bi bi-phone display-6 text-primary mb-2"></i>
+                                <h6 class="mb-0">UPI</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="payment-method-card card h-100 p-3" onclick="selectPaymentMethod('bank_transfer')" id="payment-bank_transfer">
+                            <div class="text-center">
+                                <i class="bi bi-bank display-6 text-info mb-2"></i>
+                                <h6 class="mb-0">Bank Transfer</h6>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                        <input type="hidden" name="payment_method" id="selected_payment_method" value="">
+                        <div id="payment-method-error" class="alert alert-danger mt-2" style="display: none;">
+                            Please select a payment method.
+                        </div>
+                    </div>
+
+                    <!-- UPI Payment Details -->
+                    <div class="payment-details" id="upi-details">
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>UPI Payment Details</h6>
+                            <p class="mb-1"><strong>UPI ID:</strong> {{ payment_settings.upi_id if payment_settings and payment_settings.upi_id else 'Not configured' }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label for="upi_transaction_id" class="form-label">Transaction ID / UTR Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="upi_transaction_id" name="transaction_id" 
+                                placeholder="Enter UTR/Transaction ID">
+                        </div>
+                    </div>
+
+                    <!-- Bank Transfer Details -->
+                    <div class="payment-details" id="bank_transfer-details">
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>Bank Transfer Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Bank Name:</strong> {{ payment_settings.bank_name if payment_settings and payment_settings.bank_name else 'Not configured' }}</p>
+                                    <p class="mb-1"><strong>Account Number:</strong> {{ payment_settings.account_number if payment_settings and payment_settings.account_number else 'Not configured' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>IFSC Code:</strong> {{ payment_settings.ifsc_code if payment_settings and payment_settings.ifsc_code else 'Not configured' }}</p>
+                                    <p class="mb-0"><strong>Account Holder:</strong> {{ payment_settings.account_holder_name if payment_settings and payment_settings.account_holder_name else 'Not configured' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bank_transaction_id" class="form-label">Transaction Reference Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="bank_transaction_id" name="transaction_id" 
+                                placeholder="Enter Transaction Reference Number">
+                        </div>
+                    </div>
+
+
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description / Note</label>
+                        <textarea class="form-control" id="description" name="description" rows="2" 
+                            placeholder="Optional payment description"></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary flex-grow-1">Make Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Payments</h5>
+                <a href="{{ url_for('payment_history') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_payments %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Supplier</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in recent_payments %}
+                            <tr>
+                                <td>{{ payment.supplier_name }}</td>
+                                <td>₹{{ "{:,.2f}".format(payment.amount) }}</td>
+                                <td>{{ payment.payment_method|title }}</td>
+                                <td>{{ payment.created_at.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted mb-0">No recent payments</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedMethod = '';
+
+function selectPaymentMethod(method) {
+    // Remove selected class from all cards
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked card
+    document.getElementById('payment-' + method).classList.add('selected');
+    
+    // Update hidden input
+    document.getElementById('selected_payment_method').value = method;
+    selectedMethod = method;
+    
+    // Hide all payment details
+    document.querySelectorAll('.payment-details').forEach(detail => {
+        detail.classList.remove('active');
+    });
+    
+    // Show selected payment details
+    document.getElementById(method + '-details').classList.add('active');
+    
+    // Hide error message
+    document.getElementById('payment-method-error').style.display = 'none';
+}
+
+// Form validation
+document.getElementById('payment-form').addEventListener('submit', function(e) {
+    if (!selectedMethod) {
+        e.preventDefault();
+        document.getElementById('payment-method-error').style.display = 'block';
+        return false;
+    }
+    
+    // Validate transaction ID based on payment method
+    const transactionIdInput = document.querySelector('input[name="transaction_id"]');
+    if (!transactionIdInput.value.trim()) {
+        e.preventDefault();
+        alert('Please enter the Transaction ID / Reference Number');
+        return false;
+    }
+    
+    // Validate amount
+    const amount = parseFloat(document.getElementById('amount').value);
+    const availableBalance = {{ admin_balance }};
+    if (amount > availableBalance) {
+        e.preventDefault();
+        alert('Insufficient balance. Please enter an amount within your available balance.');
+        return false;
+    }
+    
+    return true;
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Settings - Inventory Management{% endblock %}
+{% block page_title %}Payment Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6 class="text-white-50">Current Wallet Balance</h6>
+                        <h2 class="mb-1">₹{{ "{:,.2f}".format(payment_settings.amount if payment_settings else 0) }}</h2>
+                        <p class="text-white-50 mb-0">This balance is updated when customers make payments</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <i class="bi bi-wallet2" style="font-size: 4rem; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-cash-stack me-2"></i>Manage Wallet Balance</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('payment_settings') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="add">
+                    
+                    <h6 class="mb-3">Add Amount to Wallet</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label for="amount" class="form-label">Amount to Add</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                    placeholder="Enter amount to add" step="0.01" min="0">
+                            </div>
+                            <small class="text-muted">Current Balance: ₹{{ "{:,.2f}".format(payment_settings.amount if payment_settings else 0) }}</small>
+                            <p class="text-info mt-2">This will ADD the entered amount to your current wallet balance.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Add Amount
+                        </button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Instructions</h5>
+            </div>
+            <div class="card-body">
+                <h6>Wallet Balance</h6>
+                <p class="text-muted">The wallet balance increases automatically when customers complete payments through the checkout process.</p>
+                
+                <h6 class="mt-4">Adding Amount</h6>
+                <p class="text-muted">Use this section to manually add funds to your wallet for testing purposes or receiving external payments.</p>
+                
+                <h6 class="mt-4">Supplier Payments</h6>
+                <p class="text-muted">Use the wallet balance to pay your suppliers from the "Pay Suppliers" section.</p>
+                
+                <div class="mt-4">
+                    <a href="{{ url_for('supplier_payments') }}" class="btn btn-success w-100">
+                        <i class="bi bi-currency-exchange me-2"></i>Pay Suppliers
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

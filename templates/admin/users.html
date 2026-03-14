@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management - Inventory Management{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin_users') }}" class="btn btn-sm {% if not role_filter %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+        <a href="{{ url_for('admin_users', role='admin') }}" class="btn btn-sm {% if role_filter == 'admin' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Admins</a>
+        <a href="{{ url_for('admin_users', role='manager') }}" class="btn btn-sm {% if role_filter == 'manager' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Managers</a>
+        <a href="{{ url_for('admin_users', role='staff') }}" class="btn btn-sm {% if role_filter == 'staff' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Staff</a>
+        <a href="{{ url_for('admin_users', role='supplier') }}" class="btn btn-sm {% if role_filter == 'supplier' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Suppliers</a>
+    </div>
+    <a href="{{ url_for('admin_add_user') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Add User
+    </a>
+</div>
+
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-sm bg-primary rounded-circle text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                {{ user.username[0]|upper }}
+                            </div>
+                            <div>
+                                <div class="fw-medium">{{ user.username }}</div>
+                                {% if user.company_name %}
+                                <small class="text-muted">{{ user.company_name }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td><span class="badge bg-secondary">{{ user.role|capitalize }}</span></td>
+                    <td>
+                        {% if user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.created_at.strftime('%b %d, %Y') }}</td>
+                    <td>
+                        <a href="{{ url_for('admin_edit_user', user_id=user._id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ user._id }}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        
+                        <!-- Delete Modal -->
+                        <div class="modal fade" id="deleteModal{{ user._id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Delete User</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to delete <strong>{{ user.username }}</strong>?</p>
+                                        <p class="text-danger mb-0">This action cannot be undone.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form method="POST" action="{{ url_for('admin_delete_user', user_id=user._id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-4">No users found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

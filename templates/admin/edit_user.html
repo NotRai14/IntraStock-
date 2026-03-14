@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit User - Inventory Management{% endblock %}
+{% block page_title %}Edit User{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('admin_edit_user', user_id=user._id) }}" id="editUserForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Full Name </label>
+                        <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email Address </label>
+                        <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">New Password (leave blank to keep current)</label>
+                        <input type="password" name="password" class="form-control" placeholder="Enter new password" minlength="6">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Role </label>
+                        <select name="role" class="form-select" id="roleSelect" required>
+                            <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                            <option value="manager" {% if user.role == 'manager' %}selected{% endif %}>Manager</option>
+                            <option value="staff" {% if user.role == 'staff' %}selected{% endif %}>Staff</option>
+                            <option value="supplier" {% if user.role == 'supplier' %}selected{% endif %}>Supplier</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Staff specific field -->
+                <div class="mb-3 role-field" id="staffField" style="{% if user.role != 'staff' %}display: none;{% endif %}">
+                    <label class="form-label">Assigned Manager</label>
+                    <select name="manager_id" class="form-select">
+                        <option value="">Select manager</option>
+                        {% for manager in managers %}
+                        <option value="{{ manager._id }}" {% if user.manager_id == manager._id|string %}selected{% endif %}>{{ manager.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Supplier specific fields -->
+                <div class="role-field" id="supplierFields" style="{% if user.role != 'supplier' %}display: none;{% endif %}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Company Name</label>
+                            <input type="text" name="company_name" class="form-control" value="{{ user.company_name or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Contact Number</label>
+                            <input type="tel" name="contact_number" class="form-control" value="{{ user.contact_number or '' }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control" rows="2">{{ user.address or '' }}</textarea>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" name="is_active" class="form-check-input" id="isActive" {% if user.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="isActive">Account is active</label>
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Save Changes
+                    </button>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('roleSelect').addEventListener('change', function() {
+        document.querySelectorAll('.role-field').forEach(el => el.style.display = 'none');
+        
+        if (this.value === 'staff') {
+            document.getElementById('staffField').style.display = 'block';
+        } else if (this.value === 'supplier') {
+            document.getElementById('supplierFields').style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}
