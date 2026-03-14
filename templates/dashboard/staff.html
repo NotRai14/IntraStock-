@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Dashboard - Inventory Management{% endblock %}
+{% block page_title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">My Requests</p>
+                    <h3 class="stat-value mb-0">{{ stats.my_requests }}</h3>
+                </div>
+                <div class="icon primary">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Pending</p>
+                    <h3 class="stat-value mb-0">{{ stats.pending_requests }}</h3>
+                </div>
+                <div class="icon warning">
+                    <i class="bi bi-clock"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Approved</p>
+                    <h3 class="stat-value mb-0">{{ stats.approved_requests }}</h3>
+                </div>
+                <div class="icon success">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="data-table">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">My Recent Requests</h5>
+                <a href="{{ url_for('requests_list') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Request </th>
+                            <th>Items</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in my_requests %}
+                        <tr>
+                            <td>{{ req.request_number }}</td>
+                            <td>{{ req['items']|length }} item(s)</td>
+                            <td>{{ req.created_at.strftime('%b %d, %Y') }}</td>
+                            <td><span class="status-badge {{ req.status }}">{{ req.status|capitalize }}</span></td>
+                            <td>
+                                {% if req.status == 'approved' %}
+                                <form method="POST" action="{{ url_for('fulfill_request', request_id=req._id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="bi bi-check2-all me-1"></i>Fulfill
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">No requests yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="form-card">
+            <h5 class="mb-3">Quick Actions</h5>
+            <div class="d-grid gap-2">
+                <a href="{{ url_for('create_request') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>New Request
+                </a>
+                <a href="{{ url_for('products') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-box me-2"></i>View Inventory
+                </a>
+                <a href="{{ url_for('notices') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-megaphone me-2"></i>View Notices
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

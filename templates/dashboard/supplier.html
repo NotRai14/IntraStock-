@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}Supplier Dashboard - Inventory Management{% endblock %}
+{% block page_title %}Supplier Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">My Products</p>
+                    <h3 class="stat-value mb-0">{{ stats.my_products }}</h3>
+                </div>
+                <div class="icon primary">
+                    <i class="bi bi-box"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Pending Orders</p>
+                    <h3 class="stat-value mb-0">{{ stats.pending_orders }}</h3>
+                </div>
+                <div class="icon warning">
+                    <i class="bi bi-clock"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Completed Orders</p>
+                    <h3 class="stat-value mb-0">{{ stats.completed_orders }}</h3>
+                </div>
+                <div class="icon success">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Total Orders</p>
+                    <h3 class="stat-value mb-0">{{ stats.total_orders }}</h3>
+                </div>
+                <div class="icon primary">
+                    <i class="bi bi-receipt"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3" style="width: auto">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="stat-label mb-1">Wallet Balance</p>
+                    <h3 class="stat-value mb-0 text-success">₹{{ "{:,.2f}".format(stats.wallet_balance) }}</h3>
+                </div>
+                <div class="icon success">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="data-table">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Customer Orders</h5>
+                <a href="{{ url_for('supplier_orders') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td>{{ order.order_number }}</td>
+                            <td>{{ order['items']|length }} item(s)</td>
+                            <td>₹{{ "%.2f"|format(order.total) }}</td>
+                            <td>{{ order.created_at.strftime('%b %d, %Y') }}</td>
+                            <td><span class="status-badge {{ order.status }}">{{ order.status|capitalize }}</span></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">No orders yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="form-card">
+            <h5 class="mb-3">Quick Actions</h5>
+            <div class="d-grid gap-2">
+                <a href="{{ url_for('add_product') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Add Product
+                </a>
+                <a href="{{ url_for('products') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-box me-2"></i>My Products
+                </a>
+                <a href="{{ url_for('supplier_orders') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-clipboard-check me-2"></i>View Orders
+                </a>
+                <a href="{{ url_for('supplier_customers') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-building me-2"></i>My Customers
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
