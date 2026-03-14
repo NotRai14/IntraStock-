@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Customers - Inventory Management{% endblock %}
+{% block page_title %}My Customers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="mb-0 text-muted">{{ customers|length }} customers</p>
+</div>
+
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Total Orders</th>
+                    <th>Total Spent</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if customer.manager %}
+                            <div class="avatar-sm bg-primary rounded-circle text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                {{ customer.manager.username[0]|upper if customer.manager.username else '?' }}
+                            </div>
+                            <div>
+                                <div class="fw-medium">{{ customer.manager.username|default('Unknown') }}</div>
+                                <small class="text-muted">{{ customer.manager.email|default('') }}</small>
+                            </div>
+                            {% else %}
+                            <div class="text-muted">Unknown</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge bg-primary">{{ customer.total_orders }}</span>
+                    </td>
+                    <td>
+                        <strong>₹{{ "%.2f"|format(customer.total_spent) }}</strong>
+                    </td>
+                    <td>
+                        {% if customer.manager %}
+                        <a href="{{ url_for('supplier_orders') }}?manager={{ customer.manager._id }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye me-1"></i>View Orders
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center py-4">
+                        <i class="bi bi-inbox display-4 text-muted d-block mb-2"></i>
+                        <p class="text-muted">No customers yet</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
