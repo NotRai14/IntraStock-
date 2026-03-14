@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}Products - Inventory Management{% endblock %}
+{% block page_title %}Products{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="form-card mb-4">
+    <form method="GET" action="{{ url_for('products') }}" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Search</label>
+            <input type="text" name="search" class="form-control" placeholder="Search products..." value="{{ request.args.get('search', '') }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat._id }}" {% if request.args.get('category') == cat._id|string %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% if active_role != 'supplier' %}
+            <div class="col-md-3">
+                <label class="form-label">Supplier</label>
+                <select name="supplier" class="form-select">
+                    <option value="">All Suppliers</option>
+                    {% for sup in suppliers %}
+                    <option value="{{ sup._id }}" {% if request.args.get('supplier') == sup._id|string %}selected{% endif %}>
+                        {{ sup.company_name or sup.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% endif %}
+        <div class="col-md-3">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="bi bi-search me-2"></i>Filter
+                </button>
+                <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="mb-0 text-muted">{{ products|length }} products found</p>
+    {% if active_role in ['admin', 'manager', 'supplier', 'staff'] %}
+    <a href="{{ url_for('add_product') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Add Product
+    </a>
+    {% endif %}
+</div>
+
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    {% if active_role != 'supplier' %}
+                    <th>Supplier</th>
+                    {% endif %}
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if product.image %}
+                            <img src="{{ url_for('static', filename=product.image) }}" class="product-image me-3" alt="{{ product.name }}">
+                            {% else %}
+                            <div class="product-image me-3 bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; border-radius: 8px;">
+                                <i class="bi bi-box text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <div class="fw-medium">{{ product.name }}</div>
+                                {% if product.sku %}
+                                <small class="text-muted">SKU: {{ product.sku }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ product.category_name }}</td>
+                    {% if active_role != 'supplier' %}
+                    <td>{{ product.supplier_name }}</td>
+                    {% endif %}
+                    <td>₹{{ "%.2f"|format(product.price) }}</td>
+                    <td>
+                        {% if product.stock < 10 %}
+                        <span class="low-stock">{{ product.stock }}</span>
+                        {% else %}
+                        {{ product.stock }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            {% if active_role == 'manager' %}
+                            <form method="POST" action="{{ url_for('add_to_cart') }}" class="d-inline">
+                                <input type="hidden" name="product_id" value="{{ product._id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-sm btn-success" {% if product.stock < 1 %}disabled{% endif %}>
+                                    <i class="bi bi-cart-plus"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                            
+                            {% if active_role in ['admin', 'manager'] %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#stockModal{{ product._id }}">
+                                <i class="bi bi-box-seam"></i>
+                            </button>
+                            {% endif %}
+                            
+                            {% if active_role in ['admin', 'manager', 'supplier', 'staff'] %}
+                            <a href="{{ url_for('edit_product', product_id=product._id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ product._id }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Stock Modal -->
+                        <div class="modal fade" id="stockModal{{ product._id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Update Stock - {{ product.name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('update_stock', product_id=product._id) }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Current Stock: {{ product.stock }}</label>
+                                                <input type="number" name="stock" class="form-control" value="{{ product.stock }}" min="0" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Update Stock</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delete Modal -->
+                        <div class="modal fade" id="deleteModal{{ product._id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Delete Product</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to delete <strong>{{ product.name }}</strong>?</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form method="POST" action="{{ url_for('delete_product', product_id=product._id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="{% if active_role != 'supplier' %}6{% else %}5{% endif %}" class="text-center py-4">No products found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
