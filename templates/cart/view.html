@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart - Inventory Management{% endblock %}
+{% block page_title %}Shopping Cart{% endblock %}
+
+{% block content %}
+{% if cart_items %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="data-table mb-4">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart_items %}
+                        {% if item.product %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if item.product.image %}
+                                    <img src="{{ url_for('static', filename=item.product.image) }}" class="product-image me-3" alt="{{ item.product.name }}">
+                                    {% else %}
+                                    <div class="product-image me-3 bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; border-radius: 8px;">
+                                        <i class="bi bi-box text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-medium">{{ item.product.name }}</div>
+                                        <small class="text-muted">In Stock: {{ item.product.stock }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>₹{{ "%.2f"|format(item.product.price) }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('update_cart', item_id=item._id) }}" class="d-inline">
+                                    <div class="input-group" style="width: 120px;">
+                                        <input type="number" name="quantity" class="form-control form-control-sm" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-check"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </td>
+                            <td class="fw-medium">₹{{ "%.2f"|format(item.subtotal) }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('remove_from_cart', item_id=item._id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('products') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-2"></i>Continue Shopping
+            </a>
+            <form method="POST" action="{{ url_for('clear_cart') }}">
+                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to clear the cart?')">
+                    <i class="bi bi-trash me-2"></i>Clear Cart
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="form-card">
+            <h5 class="mb-4">Order Summary</h5>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Items</span>
+                <span>{{ cart_items|length }}</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between mb-4">
+                <span class="fw-bold">Total</span>
+                <span class="fw-bold fs-4">₹{{ "%.2f"|format(total) }}</span>
+            </div>
+            <form method="POST" action="{{ url_for('place_order') }}">
+                <a href="{{ url_for('checkout') }}" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-credit-card me-2"></i>Proceed to Checkout
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-2"></i>Place Order
+                </button>
+            </form>
+            <p class="text-muted text-center mt-3 mb-0">
+                <small>Orders will be sent to respective suppliers</small>
+            </p>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="form-card text-center py-5">
+            <i class="bi bi-cart display-1 text-muted mb-3"></i>
+            <h4>Your cart is empty</h4>
+            <p class="text-muted">Browse products and add items to your cart.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary">
+                <i class="bi bi-box me-2"></i>Browse Products
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
