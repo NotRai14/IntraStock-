@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Inventory Management System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            /* 🎨 Modern 2026 Theme Colors */
+            --primary-color: #1E3A8A;
+            --accent-color: #2563EB;
+            --secondary-color: #64748b;
+            --success-color: #22c55e;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-color: #0F172A;
+            --light-color: #f8fafc;
+            --sidebar-width: 280px;
+            
+            /* Main Content Area Colors */
+            --bg-primary: #F8FAFC;
+            --bg-card: #ffffff;
+            --bg-muted: #F4F6FA;
+            --text-primary: #1F2937;
+            --text-secondary: #4B5563;
+            --text-muted: #6B7280;
+            --border-color: #E3E6ED;
+            --accent: #3B82F6;
+            
+            /* Sidebar Colors */
+            --sidebar-bg: #112D5C;
+            --sidebar-gradient: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+            --sidebar-hover: #1C3F7A;
+            --sidebar-text: #FFFFFF;
+            --sidebar-muted: #B8C1D9;
+            
+            /* Success Alert */
+            --success-bg: #D1FAE5;
+            --success-text: #065F46;
+            
+            /* Icon Accent */
+            --icon-bg: #E0ECFF;
+            --icon-accent: #3B82F6;
+            
+            /* Card Shadow */
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --card-radius: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Styles - Modern 2026 Dark Gradient Theme */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-gradient);
+            padding: 24px 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .sidebar-header {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 16px;
+        }
+        
+        .sidebar-header h4 {
+            color: var(--sidebar-text);
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar-header h4 i {
+            color: var(--icon-accent);
+        }
+        
+        .sidebar-header small {
+            color: var(--sidebar-muted);
+            font-size: 0.8125rem;
+        }
+        
+        .sidebar-nav {
+            list-style: none;
+            padding: 0 12px;
+        }
+        
+        .sidebar-nav li {
+            margin-bottom: 4px;
+        }
+        
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--sidebar-muted);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 0.9375rem;
+        }
+        
+        .sidebar-nav a:hover {
+            background-color: var(--sidebar-hover);
+            color: var(--sidebar-text);
+        }
+        
+        .sidebar-nav a.active {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        
+        .sidebar-nav a.active i {
+            color: #ffffff;
+        }
+        
+        .sidebar-nav a i {
+            margin-right: 12px;
+            font-size: 1.125rem;
+            width: 20px;
+            text-align: center;
+            color: var(--sidebar-muted);
+            transition: color 0.2s ease;
+        }
+        
+        .sidebar-nav a:hover i {
+            color: var(--sidebar-text);
+        }
+        
+        .sidebar-nav .nav-label {
+            padding: 20px 16px 8px;
+            color: var(--sidebar-muted);
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            opacity: 0.7;
+        }
+        
+        /* Pay Suppliers link - base state (normal link appearance) */
+        .sidebar-nav a.pay-suppliers-link {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar-nav a.pay-suppliers-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .sidebar-nav a.pay-suppliers-link:hover::before {
+            opacity: 1;
+        }
+        
+        .sidebar-nav a.pay-suppliers-link:hover {
+            transform: translateX(2px);
+        }
+        
+        /* Active state with highest specificity to override all other states */
+        .sidebar-nav a.pay-suppliers-link.active,
+        .sidebar-nav a.pay-suppliers-link.active:link,
+        .sidebar-nav a.pay-suppliers-link.active:visited,
+        .sidebar-nav a.pay-suppliers-link.active:hover,
+        .sidebar-nav a.pay-suppliers-link.active:focus,
+        .sidebar-nav a.pay-suppliers-link.active:active {
+            background: linear-gradient(135deg, #1E40AF 0%, #1D4ED8 100%) !important;
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.5), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+            transform: scale(1.02);
+        }
+        
+        .sidebar-nav a.pay-suppliers-link.active::before {
+            opacity: 1;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            background: var(--bg-primary);
+        }
+        
+        /* Top Navbar */
+        .top-navbar {
+            background: #ffffff;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .page-title {
+            font-size: 1.375rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .user-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .notification-badge {
+            position: relative;
+        }
+        
+        .notification-badge .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.65rem;
+        }
+        
+        /* Content Area */
+        .content-area {
+            padding: 32px;
+        }
+        
+        /* Cards */
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            padding: 24px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+        
+        .stat-card .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.375rem;
+        }
+        
+        .stat-card .icon.primary {
+            background: var(--icon-bg);
+            color: var(--accent-color);
+        }
+        
+        .stat-card .icon.success {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success-color);
+        }
+        
+        .stat-card .icon.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .stat-card .icon.danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .stat-card .stat-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stat-card .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        /* Table Styles */
+        .data-table {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+        
+        .data-table .table {
+            margin: 0;
+        }
+        
+        .data-table .table th {
+            background: var(--bg-muted);
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 16px;
+            font-size: 0.8125rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        
+        .data-table .table td {
+            padding: 16px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+        
+        .data-table .table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-badge.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #b45309;
+        }
+        
+        .status-badge.approved {
+            background: var(--icon-bg);
+            color: var(--accent-color);
+        }
+        
+        .status-badge.completed {
+            background: rgba(34, 197, 94, 0.1);
+            color: #15803d;
+        }
+        
+        .status-badge.rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+        
+        .status-badge.fulfilled {
+            background: rgba(34, 197, 94, 0.1);
+            color: #15803d;
+        }
+        
+        /* Form Styles */
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            padding: 28px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .form-control, .form-select {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: #ffffff;
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+        }
+        
+        /* Alert Styles - Success */
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: none;
+            border-radius: var(--card-radius);
+            padding: 16px 20px;
+            font-weight: 500;
+        }
+        
+        /* Alerts */
+        .alert {
+            border: none;
+            border-radius: var(--card-radius);
+            padding: 16px 20px;
+            font-weight: 500;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 991px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-toggle {
+                display: block !important;
+            }
+        }
+        
+        .mobile-toggle {
+            display: none;
+        }
+        
+        /* Low Stock Warning */
+        .low-stock {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+        
+        /* Product Image */
+        .product-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        /* Priority Badges */
+        .priority-high {
+            color: var(--danger-color);
+        }
+        
+        .priority-normal {
+            color: var(--secondary-color);
+        }
+        
+        .priority-low {
+            color: var(--success-color);
+        }
+        
+        /* Custom Scrollbar for Sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Dropdown Menu Styling */
+        .dropdown-menu {
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 8px;
+        }
+        
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
+        }
+        
+        .dropdown-item:hover {
+            background: var(--bg-muted);
+            color: var(--text-primary);
+        }
+        
+        .dropdown-item.text-danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        /* Card hover effects */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+        }
+        
+        /* Modal styling */
+        .modal-content {
+            border: none;
+            border-radius: var(--card-radius);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 24px;
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: 16px 24px;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+            {% if session.users and active_role %}
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h4><i class="bi bi-box-seam me-2"></i>IntraStocks</h4>
+            <small>Inventory Management</small>
+        </div>
+
+        <ul class="sidebar-nav">
+            <li>
+                <a href="{{ url_for('dashboard') }}" class="{% if current_endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2"></i>Dashboard
+                </a>
+            </li>
+
+            {% if active_role == 'admin' %}
+            <li class="nav-label">Administration</li>
+            <li>
+                <a href="{{ url_for('admin_users') }}" class="{% if current_endpoint == 'admin_users' %}active{% endif %}">
+                    <i class="bi bi-people"></i>User Management
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('admin_reports') }}" class="{% if current_endpoint == 'admin_reports' %}active{% endif %}">
+                    <i class="bi bi-bar-chart"></i>Reports & Analytics
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('payment_settings') }}" class="{% if current_endpoint == 'payment_settings' %}active{% endif %}">
+                    <i class="bi bi-gear"></i>Payment Settings
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('supplier_payments') }}" class="pay-suppliers-link {% if current_endpoint == 'supplier_payments' %}active{% endif %}">
+                    <i class="bi bi-currency-exchange"></i>Pay Suppliers
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('payment_history') }}" class="{% if current_endpoint == 'payment_history' %}active{% endif %}">
+                    <i class="bi bi-clock-history"></i>Payment History
+                </a>
+            </li>
+            {% endif %}
+
+            {% if active_role == 'manager' %}
+            <li class="nav-label">Team</li>
+            <li>
+                <a href="{{ url_for('manager_staff') }}" class="{% if current_endpoint == 'manager_staff' %}active{% endif %}">
+                    <i class="bi bi-person-badge"></i>My Staff
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('manager_suppliers') }}" class="{% if current_endpoint == 'manager_suppliers' %}active{% endif %}">
+                    <i class="bi bi-truck"></i>Suppliers
+                </a>
+            </li>
+            {% endif %}
+
+            {% if active_role == 'supplier' %}
+            <li class="nav-label">Business</li>
+            <li>
+                <a href="{{ url_for('supplier_customers') }}" class="{% if current_endpoint == 'supplier_customers' %}active{% endif %}">
+                    <i class="bi bi-building"></i>Customers
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('supplier_payment_history') }}" class="{% if current_endpoint == 'supplier_payment_history' %}active{% endif %}">
+                    <i class="bi bi-credit-card"></i>My Payments
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="nav-label">Inventory</li>
+            <li>
+                <a href="{{ url_for('products') }}" class="{% if current_endpoint == 'products' or current_endpoint == 'add_product' or current_endpoint == 'edit_product' %}active{% endif %}">
+                    <i class="bi bi-box"></i>Products
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('categories') }}" class="{% if current_endpoint == 'categories' or current_endpoint == 'add_category' or current_endpoint == 'edit_category' %}active{% endif %}">
+                    <i class="bi bi-tags"></i>Categories
+                </a>
+            </li>
+
+            {% if active_role == 'manager' %}
+            <li class="nav-label">Orders</li>
+            <li>
+                <a href="{{ url_for('view_cart') }}" class="{% if current_endpoint == 'view_cart' %}active{% endif %}">
+                    <i class="bi bi-cart"></i>Cart
+                    <span class="badge bg-primary ms-auto" id="cart-count">0</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('manager_orders') }}" class="{% if current_endpoint == 'manager_orders' %}active{% endif %}">
+                    <i class="bi bi-receipt"></i>My Orders
+                </a>
+            </li>
+            {% endif %}
+
+            {% if active_role == 'supplier' %}
+            <li class="nav-label">Orders</li>
+            <li>
+                <a href="{{ url_for('supplier_orders') }}" class="{% if current_endpoint == 'supplier_orders' %}active{% endif %}">
+                    <i class="bi bi-clipboard-check"></i>Customer Orders
+                </a>
+            </li>
+            {% endif %}
+
+            {% if active_role in ['staff', 'manager', 'admin'] %}
+            <li class="nav-label">Requests</li>
+            <li>
+                <a href="{{ url_for('requests_list') }}" class="{% if current_endpoint == 'requests_list' %}active{% endif %}">
+                    <i class="bi bi-file-earmark-text"></i>
+                    {% if active_role == 'staff' %}My Requests{% else %}Staff Requests{% endif %}
+                </a>
+            </li>
+            {% if active_role == 'staff' %}
+            <li>
+                <a href="{{ url_for('create_request') }}" class="{% if current_endpoint == 'create_request' %}active{% endif %}">
+                    <i class="bi bi-plus-circle"></i>New Request
+                </a>
+            </li>
+            {% endif %}
+            {% endif %}
+
+            <li class="nav-label">Communication</li>
+            <li>
+                <a href="{{ url_for('notices') }}" class="{% if current_endpoint == 'notices' or current_endpoint == 'view_notice' %}active{% endif %}">
+                    <i class="bi bi-megaphone"></i>Notices
+                </a>
+            </li>
+            {% if active_role in ['admin', 'manager'] %}
+            <li>
+                <a href="{{ url_for('create_notice') }}" class="{% if current_endpoint == 'create_notice' or current_endpoint == 'edit_notice' %}active{% endif %}">
+                    <i class="bi bi-plus-circle"></i>Create Notice
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="nav-label">Account</li>
+            <li>
+                <a href="{{ url_for('profile') }}" class="{% if current_endpoint == 'profile' %}active{% endif %}">
+                    <i class="bi bi-person-circle"></i>Profile
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('logout') }}">
+                    <i class="bi bi-box-arrow-left"></i>Logout
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <nav class="top-navbar">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-link mobile-toggle me-3" onclick="toggleSidebar()">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
+
+            <div class="user-dropdown">
+                <div class="notification-badge">
+                    <a href="{{ url_for('notices') }}" class="btn btn-link">
+                        <i class="bi bi-bell fs-5"></i>
+                    </a>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-link dropdown-toggle text-decoration-none" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-2"></i>
+                        {{ session.users[active_role].username }}
+                        <span class="badge bg-secondary ms-2">{{ active_role }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% for role, user_data in session.users.items() %}
+                        {% if role != active_role %}
+                        <li><a class="dropdown-item" href="{{ url_for('switch_role', role=role) }}">
+                            <i class="bi bi-arrow-repeat me-2"></i>Switch to {{ role|title }}
+                        </a></li>
+                        {% endif %}
+                        {% endfor %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="bi bi-person me-2"></i>Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% for role, user_data in session.users.items() %}
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout', role=role) }}">
+                            <i class="bi bi-box-arrow-left me-2"></i>Logout {{ role|title }}
+                        </a></li>
+                        {% endfor %}
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <i class="bi bi-box-arrow-left me-2"></i>Logout All
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content-area">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    {% else %}
+    {% block auth_content %}{% endblock %}
+    {% endif %}
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Generate unique tab ID for per-tab session isolation
+        if (!sessionStorage.getItem('tab_id')) {
+            sessionStorage.setItem('tab_id', Date.now() + '_' + Math.random().toString(36).substr(2, 9));
+        }
+        const tabId = sessionStorage.getItem('tab_id');
+
+        // Redirect to include tab_id in query if not present (for pages that need session isolation)
+        if (!window.location.search.includes('tab_id') && !window.location.pathname.includes('/login') && !window.location.pathname.includes('/register') && !window.location.pathname.includes('/forgot-password') && !window.location.pathname.includes('/verify-otp')) {
+            const url = new URL(window.location);
+            url.searchParams.set('tab_id', tabId);
+            window.location = url;
+        }
+
+        // Add tab ID to all fetch requests
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            args[1] = args[1] || {};
+            args[1].headers = args[1].headers || {};
+            args[1].headers['X-Tab-ID'] = tabId;
+            return originalFetch.apply(this, args);
+        };
+
+        // Add tab ID to all forms and links
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'tab_id';
+                input.value = tabId;
+                form.appendChild(input);
+            });
+
+            // Add tab_id to all internal links
+            const links = document.querySelectorAll('a[href]');
+            links.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && href.startsWith('/') && !href.includes('/logout') && !href.includes('tab_id')) {
+                    const url = new URL(link.href, window.location.origin);
+                    url.searchParams.set('tab_id', tabId);
+                    link.href = url.toString();
+                }
+            });
+        });
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        // Sidebar active state verification - ensures only one item is highlighted
+        // This runs after page load to verify consistency
+        (function() {
+            // Small delay to ensure DOM is fully loaded and Flask rendered
+            setTimeout(function() {
+                const navLinks = document.querySelectorAll('.sidebar-nav a');
+                const activeLinks = Array.from(navLinks).filter(link => link.classList.contains('active'));
+                
+                // If multiple items are active or none are active, fix it
+                if (activeLinks.length !== 1) {
+                    const currentPath = window.location.pathname;
+                    
+                    // Remove all active classes first
+                    navLinks.forEach(function(link) {
+                        link.classList.remove('active');
+                    });
+                    
+                    // Find the matching link and add active
+                    navLinks.forEach(function(link) {
+                        const href = link.getAttribute('href');
+                        if (href) {
+                            const linkPath = href.split('?')[0];
+                            if (linkPath === currentPath) {
+                                link.classList.add('active');
+                            }
+                        }
+                    });
+                }
+            }, 50);
+        })();
+
+        // Update cart count
+        {% if active_role == 'manager' %}
+        function updateCartCount() {
+
+
+            fetch('/api/cart/count')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const cartCountEl = document.getElementById('cart-count');
+                    if (cartCountEl) {
+                        cartCountEl.textContent = data.count || 0;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating cart count:', error);
+                    const cartCountEl = document.getElementById('cart-count');
+                    if (cartCountEl) {
+                        cartCountEl.textContent = '0';
+                    }
+                });
+        }
+
+        // Update cart count on page load
+        updateCartCount();
+
+        // Update cart count periodically (every 5 seconds) to catch changes from other tabs
+        setInterval(updateCartCount, 5000);
+
+        // Update cart count after form submissions (for add to cart)
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (form && form.action && (form.action.includes('/cart/add') || form.action.includes('/cart/update') || form.action.includes('/cart/remove'))) {
+                // Update immediately and then again after a delay
+                setTimeout(updateCartCount, 300);
+                setTimeout(updateCartCount, 1000);
+            }
+        });
+        {% endif %}
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
