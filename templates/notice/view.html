@@ -1,0 +1,71 @@
+
+{% extends 'base.html' %}
+
+{% block title %}{{ notice.title }} - Inventory Management{% endblock %}
+{% block page_title %}Notice{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <a href="{{ url_for('notices') }}" class="btn btn-outline-secondary mb-4">
+            <i class="bi bi-arrow-left me-2"></i>Back to Notices
+        </a>
+        
+        {% if notice %}
+        <div class="form-card">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    {% if notice.priority == 'high' %}
+                    <span class="badge bg-danger mb-2">High Priority</span>
+                    {% elif notice.priority == 'low' %}
+                    <span class="badge bg-secondary mb-2">Low Priority</span>
+                    {% endif %}
+                    <h2>{{ notice.title }}</h2>
+                </div>
+                {% if active_role == 'admin' or (active_role == 'manager' and notice.author_id == session.users[active_role].user_id) %}
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('edit_notice', notice_id=notice._id) }}"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+                        <li>
+                            <form method="POST" action="{{ url_for('delete_notice', notice_id=notice._id) }}">
+                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to delete this notice?')">
+                                    <i class="bi bi-trash me-2"></i>Delete
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="d-flex gap-4 text-muted mb-4">
+                <span><i class="bi bi-person me-1"></i>{{ notice.author_name }}</span>
+                <span><i class="bi bi-calendar me-1"></i>{{ notice.created_at.strftime('%B %d, %Y') }}</span>
+            </div>
+            
+            {% if notice.target_roles %}
+            <div class="mb-4">
+                <span class="text-muted">Visible to: </span>
+                {% for role in notice.target_roles %}
+                <span class="badge bg-secondary">{{ role|capitalize }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <hr>
+            
+            <div class="notice-content mt-4" style="white-space: pre-wrap;">{{ notice.content }}</div>
+        </div>
+        {% else %}
+        <div class="form-card text-center py-5">
+            <i class="bi bi-exclamation-circle display-1 text-muted mb-3"></i>
+            <h5>Notice not found</h5>
+            <p class="text-muted">The requested notice could not be found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

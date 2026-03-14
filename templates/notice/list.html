@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Notices - Inventory Management{% endblock %}
+{% block page_title %}Notices{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="mb-0 text-muted">{{ notices|length }} notices</p>
+    {% if active_role in ['admin', 'manager'] %}
+    <a href="{{ url_for('create_notice') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Create Notice
+    </a>
+    {% endif %}
+</div>
+
+<div class="row g-4">
+    {% for notice in notices %}
+    <div class="col-md-6 col-lg-4">
+        <div class="form-card h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    {% if notice.priority == 'high' %}
+                    <span class="badge bg-danger">High Priority</span>
+                    {% elif notice.priority == 'low' %}
+                    <span class="badge bg-secondary">Low Priority</span>
+                    {% endif %}
+                </div>
+                {% if active_role == 'admin' or (active_role == 'manager' and notice.author_id == session.users[active_role].user_id) %}
+                <div class="dropdown">
+                    <button class="btn btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('edit_notice', notice_id=notice._id) }}"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+                        <li>
+                            <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ notice._id }}">
+                                <i class="bi bi-trash me-2"></i>Delete
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            <h5 class="mb-2">{{ notice.title }}</h5>
+            <p class="text-muted mb-3">{{ notice.content[:100] }}{% if notice.content|length > 100 %}...{% endif %}</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    <i class="bi bi-person me-1"></i>{{ notice.author_name }}
+                </small>
+                <small class="text-muted">{{ notice.created_at.strftime('%b %d, %Y') }}</small>
+            </div>
+            <a href="{{ url_for('view_notice', notice_id=notice._id) }}" class="stretched-link"></a>
+        </div>
+        
+        <!-- Delete Modal -->
+        <div class="modal fade" id="deleteModal{{ notice._id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Delete Notice</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete <strong>{{ notice.title }}</strong>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form method="POST" action="{{ url_for('delete_notice', notice_id=notice._id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="form-card text-center py-5">
+            <i class="bi bi-megaphone display-1 text-muted mb-3"></i>
+            <h5>No notices yet</h5>
+            <p class="text-muted">There are no announcements at this time.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
