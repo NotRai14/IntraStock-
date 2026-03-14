@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Orders - Inventory Management{% endblock %}
+{% block page_title %}Customer Orders{% endblock %}
+
+{% block content %}
+<div class="d-flex gap-2 mb-4">
+    <a href="{{ url_for('supplier_orders') }}" class="btn btn-sm {% if not request.args.get('status') %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+    <a href="{{ url_for('supplier_orders', status='pending') }}" class="btn btn-sm {% if request.args.get('status') == 'pending' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Pending</a>
+    <a href="{{ url_for('supplier_orders', status='approved') }}" class="btn btn-sm {% if request.args.get('status') == 'approved' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Approved</a>
+    <a href="{{ url_for('supplier_orders', status='completed') }}" class="btn btn-sm {% if request.args.get('status') == 'completed' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Completed</a>
+    <a href="{{ url_for('supplier_orders', status='rejected') }}" class="btn btn-sm {% if request.args.get('status') == 'rejected' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Rejected</a>
+</div>
+
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#orderModal{{ order._id }}">
+                            {{ order.order_number }}
+                        </a>
+                    </td>
+                    <td>{{ order.manager_name }}</td>
+                    <td>{{ order['items']|length }} item(s)</td>
+                    <td>₹{{ "%.2f"|format(order.total) }}</td>
+                    <td>{{ order.created_at.strftime('%b %d, %Y') }}</td>
+                    <td><span class="status-badge {{ order.status }}">{{ order.status|capitalize }}</span></td>
+                    <td>
+                        {% if order.status == 'pending' %}
+                        <form method="POST" action="{{ url_for('approve_order', order_id=order._id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="bi bi-check me-1"></i>Approve
+                            </button>
+                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ order._id }}">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        {% elif order.status == 'approved' %}
+                        <form method="POST" action="{{ url_for('complete_order', order_id=order._id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="bi bi-check2-all me-1"></i>Complete
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                
+                <!-- Order Details Modal -->
+                <div class="modal fade" id="orderModal{{ order._id }}" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Order Details - {{ order.order_number }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Customer:</strong> {{ order.manager_name }}</p>
+                                        <p class="mb-1"><strong>Date:</strong> {{ order.created_at.strftime('%b %d, %Y %H:%M') }}</p>
+                                    </div>
+                                    <div class="col-md-6 text-md-end">
+                                        <p class="mb-1"><strong>Status:</strong> <span class="status-badge {{ order.status }}">{{ order.status|capitalize }}</span></p>
+                                    </div>
+                                </div>
+                                
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Price</th>
+                                            <th>Quantity</th>
+                                            <th>Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in order['items'] %}
+                                        <tr>
+                                            <td>{{ item.product_name }}</td>
+                                            <td>₹{{ "%.2f"|format(item.price) }}</td>
+                                            <td>{{ item.quantity }}</td>
+                                            <td>₹{{ "%.2f"|format(item.subtotal) }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                            <td><strong>₹{{ "%.2f"|format(order.total) }}</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reject Modal -->
+                <div class="modal fade" id="rejectModal{{ order._id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Reject Order</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form method="POST" action="{{ url_for('reject_order', order_id=order._id) }}">
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Rejection Reason (Optional)</label>
+                                        <textarea name="reason" class="form-control" rows="3" placeholder="Enter reason for rejection"></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-danger">Reject Order</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4">No orders found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
