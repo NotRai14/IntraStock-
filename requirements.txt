@@ -2,3 +2,7 @@ flask
 pymongo
 dnspython
 gunicorn
+Flask-Mail
+Werkzeug
+python-dotenv
+bcrypt
